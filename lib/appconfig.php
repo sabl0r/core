@@ -184,7 +184,7 @@ class AppConfig {
 	 * @return array
 	 */
 	public function getValues($app, $key) {
-		if($app!==false and $key!==false) {
+		if(($app!==false) == ($key!==false)) {
 			return false;
 		}
 
