@@ -74,10 +74,10 @@ class OC_DB {
 		//check if we can use PDO, else use MDB2 (installation always needs to be done my mdb2)
 		if(class_exists('PDO') && OC_Config::getValue('installed', false)) {
 			$type = OC_Config::getValue( "dbtype", "sqlite" );
-			if($type=='oci') { //oracle also always needs mdb2
+			if($type === 'oci') { //oracle also always needs mdb2
 				return self::BACKEND_MDB2;
 			}
-			if($type=='sqlite3') $type='sqlite';
+			if($type === 'sqlite3') $type='sqlite';
 			$drivers=PDO::getAvailableDrivers();
 			if(array_search($type, $drivers)!==false) {
 				return self::BACKEND_PDO;
@@ -333,8 +333,8 @@ class OC_DB {
 	 */
 	static public function prepare( $query , $limit = null, $offset = null, $isManipulation = null) {
 
-		if (!is_null($limit) && $limit != -1) {
-			if (self::$backend == self::BACKEND_MDB2) {
+		if (!is_null($limit) && $limit !== -1) {
+			if (self::$backend === self::BACKEND_MDB2) {
 				//MDB2 uses or emulates limits & offset internally
 				self::$MDB2->setLimit($limit, $offset);
 			} else {
@@ -349,7 +349,7 @@ class OC_DB {
 					$limitsql .= ' OFFSET ' . $offset;
 				}
 				//insert limitsql
-				if (substr($query, -1) == ';') { //if query ends with ;
+				if (substr($query, -1) === ';') { //if query ends with ;
 					$query = substr($query, 0, -1) . $limitsql . ';';
 				} else {
 					$query.=$limitsql;
@@ -396,9 +396,9 @@ class OC_DB {
 			// differentiate between query and manipulation
 			$result = new PDOStatementWrapper($result, $isManipulation);
 		}
-		if ((is_null($limit) || $limit == -1) and self::$cachingEnabled ) {
+		if ((is_null($limit) || $limit === -1) and self::$cachingEnabled ) {
 			$type = OC_Config::getValue( "dbtype", "sqlite" );
-			if( $type != 'sqlite' && $type != 'sqlite3' ) {
+			if( $type !== 'sqlite' && $type !== 'sqlite3' ) {
 				self::$preparedQueries[$rawQuery] = $result;
 			}
 		}
@@ -592,7 +592,7 @@ class OC_DB {
 		 * http://www.sqlite.org/lang_createtable.html
 		 * http://docs.oracle.com/cd/B19306_01/server.102/b14200/functions037.htm
 		 */
-		if( $CONFIG_DBTYPE == 'pgsql' ) { //mysql support it too but sqlite doesn't
+		if( $CONFIG_DBTYPE === 'pgsql' ) { //mysql support it too but sqlite doesn't
 			$content = str_replace( '<default>0000-00-00 00:00:00</default>',
 				'<default>CURRENT_TIMESTAMP</default>', $content );
 		}
@@ -657,7 +657,7 @@ class OC_DB {
 		 * http://www.sqlite.org/lang_createtable.html
 		 * http://docs.oracle.com/cd/B19306_01/server.102/b14200/functions037.htm
 		 */
-		if( $CONFIG_DBTYPE == 'pgsql' ) { //mysql support it too but sqlite doesn't
+		if( $CONFIG_DBTYPE === 'pgsql' ) { //mysql support it too but sqlite doesn't
 			$content = str_replace( '<default>0000-00-00 00:00:00</default>',
 				'<default>CURRENT_TIMESTAMP</default>', $content );
 		}
@@ -717,7 +717,7 @@ class OC_DB {
 		$query = '';
 		$inserts = array_values($input);
 		// differences in escaping of table names ('`' for mysql) and getting the current timestamp
-		if( $type == 'sqlite' || $type == 'sqlite3' ) {
+		if( $type === 'sqlite' || $type === 'sqlite3' ) {
 			// NOTE: For SQLite we have to use this clumsy approach
 			// otherwise all fieldnames used must have a unique key.
 			$query = 'SELECT * FROM `' . $table . '` WHERE ';
@@ -738,7 +738,7 @@ class OC_DB {
 			} else {
 				return true;
 			}
-		} elseif( $type == 'pgsql' || $type == 'oci' || $type == 'mysql' || $type == 'mssql') {
+		} elseif( $type === 'pgsql' || $type === 'oci' || $type === 'mysql' || $type === 'mssql') {
 			$query = 'INSERT INTO `' .$table . '` (`'
 				. implode('`,`', array_keys($input)) . '`) SELECT '
 				. str_repeat('?,', count($input)-1).'? ' // Is there a prettier alternative?
@@ -785,19 +785,19 @@ class OC_DB {
 		$prefix = self::$prefix;
 
 		// differences in escaping of table names ('`' for mysql) and getting the current timestamp
-		if( $type == 'sqlite' || $type == 'sqlite3' ) {
+		if( $type === 'sqlite' || $type === 'sqlite3' ) {
 			$query = str_replace( '`', '"', $query );
 			$query = str_ireplace( 'NOW()', 'datetime(\'now\')', $query );
 			$query = str_ireplace( 'UNIX_TIMESTAMP()', 'strftime(\'%s\',\'now\')', $query );
-		}elseif( $type == 'pgsql' ) {
+		}elseif( $type === 'pgsql' ) {
 			$query = str_replace( '`', '"', $query );
 			$query = str_ireplace( 'UNIX_TIMESTAMP()', 'cast(extract(epoch from current_timestamp) as integer)',
 				$query );
-		}elseif( $type == 'oci'  ) {
+		}elseif( $type === 'oci'  ) {
 			$query = str_replace( '`', '"', $query );
 			$query = str_ireplace( 'NOW()', 'CURRENT_TIMESTAMP', $query );
 			$query = str_ireplace( 'UNIX_TIMESTAMP()', '((CAST(SYS_EXTRACT_UTC(systimestamp) AS DATE))-TO_DATE(\'1970101000000\',\'YYYYMMDDHH24MiSS\'))*24*3600', $query );
-		}elseif( $type == 'mssql' ) {
+		}elseif( $type === 'mssql' ) {
 			$query = preg_replace( "/\`(.*?)`/", "[$1]", $query );
 			$query = str_replace( 'NOW()', 'CURRENT_TIMESTAMP', $query );
 			$query = str_replace( 'now()', 'CURRENT_TIMESTAMP', $query );
@@ -820,7 +820,7 @@ class OC_DB {
             return $query;
         } 
         
-        // total == 0 means all results - not zero results
+        // total === 0 means all results - not zero results
         //
         // First number is either total or offset, locate it by first space
         //
@@ -846,7 +846,7 @@ class OC_DB {
 
         $query = trim (substr ($query, 0, $limitLocation));
 
-        if ($offset == 0 && $total !== 0) {
+        if ($offset === 0 && $total !== 0) {
             if (strpos($query, "SELECT") === false) {
                 $query = "TOP {$total} " . $query;
             } else {
@@ -1064,7 +1064,7 @@ class PDOStatementWrapper{
 				$type = OC_Config::getValue( "dbtype", "sqlite" );
 			}
 
-			if ($type == 'mssql') {
+			if ($type === 'mssql') {
 				$input = $this->tryFixSubstringLastArgumentDataForMSSQL($input);
 			}
 
@@ -1100,19 +1100,19 @@ class PDOStatementWrapper{
 
 			// Create new query
 			for ($i = 0; $i < strlen ($query); $i++) {
-				if ($inSubstring == false) {
+				if ($inSubstring === false) {
 					// Defines when we should start inserting values
-					if (substr ($query, $i, 9) == 'SUBSTRING') {
+					if (substr ($query, $i, 9) === 'SUBSTRING') {
 						$inSubstring = true;
 					}
 				} else {
 					// Defines when we should stop inserting values
-					if (substr ($query, $i, 1) == ')') {
+					if (substr ($query, $i, 1) === ')') {
 						$inSubstring = false;
 					}
 				}
 
-				if (substr ($query, $i, 1) == '?') {
+				if (substr ($query, $i, 1) === '?') {
 					// We found a question mark
 					if ($inSubstring) {
 						$newQuery .= $input[$cArg];
